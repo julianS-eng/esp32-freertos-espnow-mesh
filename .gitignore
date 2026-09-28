@@ -11,6 +11,7 @@ dependencies.lock
 
 # Host (CMake) builds
 host/build/
+host/build-*/
 cmake-build-*/
 compile_commands.json
 
