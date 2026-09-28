@@ -1,0 +1,6 @@
+# delay(s) command  -- typed into the gateway console during the QEMU smoke test
+30 help
+5 set 256 report_ms 2000
+10 set 257 hb_ms 4000
+10 reboot 258
+5 stats
