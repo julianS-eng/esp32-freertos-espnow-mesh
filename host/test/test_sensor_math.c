@@ -121,8 +121,11 @@ static void test_sim_is_deterministic_per_seed(void)
     read_sim(42, &a, 30);
     read_sim(42, &b, 30);
     read_sim(43, &c, 30);
-    TEST_ASSERT_EQUAL_MEMORY(&a, &b, sizeof(a));
-    TEST_ASSERT_NOT_EQUAL(0, memcmp(&a, &c, sizeof(a)));
+    /* Compare only the populated channels: slots past `count` are never written. */
+    TEST_ASSERT_EQUAL_UINT8(a.count, b.count);
+    TEST_ASSERT_EQUAL_UINT8(a.status, b.status);
+    TEST_ASSERT_EQUAL_MEMORY(a.ch, b.ch, sizeof(mesh_channel_t) * a.count);
+    TEST_ASSERT_NOT_EQUAL(0, memcmp(a.ch, c.ch, sizeof(mesh_channel_t) * a.count));
 }
 
 static void test_sim_produces_all_channels_in_plausible_ranges(void)
