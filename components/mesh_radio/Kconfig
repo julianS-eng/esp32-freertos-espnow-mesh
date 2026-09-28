@@ -1,0 +1,82 @@
+menu "ESP-NOW mesh radio"
+
+    choice MESH_RADIO_BACKEND
+        prompt "Radio backend"
+        default MESH_RADIO_ESPNOW
+        help
+            ESP-NOW is the real radio. The loopback backends are test doubles
+            that never touch the RF hardware, so the complete firmware (tasks,
+            queues, retries, JSON output) can run under Espressif's QEMU, which
+            does not emulate the Wi-Fi PHY. They are used by CI for boot smoke
+            tests and to measure task stack high-water marks.
+
+        config MESH_RADIO_ESPNOW
+            bool "ESP-NOW (real radio)"
+        config MESH_RADIO_LOOPBACK_GATEWAY
+            bool "Loopback: emulated gateway (run a sensor node without a gateway / in QEMU)"
+        config MESH_RADIO_LOOPBACK_NODES
+            bool "Loopback: emulated sensor nodes (run the gateway without nodes / in QEMU)"
+    endchoice
+
+    config MESH_LOOPBACK_LOSS_PCT
+        int "Loopback: frame loss probability (%)"
+        depends on !MESH_RADIO_ESPNOW
+        range 0 90
+        default 5
+
+    config MESH_LOOPBACK_NODE_COUNT
+        int "Loopback: number of emulated nodes"
+        depends on MESH_RADIO_LOOPBACK_NODES
+        range 1 16
+        default 4
+
+    config MESH_WIFI_CHANNEL
+        int "Wi-Fi channel shared by the whole mesh"
+        range 1 13
+        default 1
+        help
+            ESP-NOW peers must be on the same primary channel. The gateway and
+            every node are pinned to this channel (no scanning, see
+            docs/ARCHITECTURE.md "Future work").
+
+    config MESH_LONG_RANGE
+        bool "Enable Espressif Long Range (LR) PHY mode"
+        default n
+        help
+            Adds WIFI_PROTOCOL_LR to the station interface. Increases range
+            at 512/256 kbit/s; every device in the mesh must enable it.
+
+    config MESH_TX_POWER_QDBM
+        int "Maximum TX power (units of 0.25 dBm)"
+        range 8 84
+        default 78
+        help
+            Passed to esp_wifi_set_max_tx_power(). 78 = 19.5 dBm.
+
+    config MESH_ENCRYPTION
+        bool "Encrypt unicast ESP-NOW traffic (PMK/LMK, CCMP)"
+        default n
+        help
+            When enabled, every unicast peer is added with encrypt=true and the
+            local master key below. Broadcast frames (JOIN) are always
+            plaintext - this is an ESP-NOW limitation. See docs/PROTOCOL.md
+            "Security model" for the threat model and the limits (at most
+            17 encrypted peers).
+
+    config MESH_PMK
+        string "Primary master key (32 hex characters)"
+        depends on MESH_ENCRYPTION
+        default "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        help
+            16-byte PMK used to encrypt the LMKs. CHANGE THIS for any real
+            deployment; the default is public.
+
+    config MESH_LMK
+        string "Local master key (32 hex characters)"
+        depends on MESH_ENCRYPTION
+        default "0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        help
+            16-byte LMK shared by the gateway and all nodes. CHANGE THIS for
+            any real deployment; the default is public.
+
+endmenu
