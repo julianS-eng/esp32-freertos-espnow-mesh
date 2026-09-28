@@ -41,9 +41,29 @@ add_library(mesh_protocol STATIC
     ${PROTO_DIR}/mesh_crc.c
     ${PROTO_DIR}/mesh_protocol.c
     ${PROTO_DIR}/mesh_seq.c
-    ${PROTO_DIR}/mesh_tx.c)
+    ${PROTO_DIR}/mesh_tx.c
+    ${PROTO_DIR}/mesh_util.c)
 target_include_directories(mesh_protocol PUBLIC ${PROTO_DIR}/include)
 target_compile_options(mesh_protocol PRIVATE ${WARN_FLAGS})
+
+set(NODE_DIR ${REPO_ROOT}/sensor_node/components)
+add_library(node_core STATIC
+    ${NODE_DIR}/node_core/node_config.c
+    ${NODE_DIR}/sensor_hal/sensor_math.c
+    ${NODE_DIR}/sensor_hal/sensor_sim.c)
+target_include_directories(node_core PUBLIC ${NODE_DIR}/node_core/include ${NODE_DIR}/sensor_hal/include)
+target_link_libraries(node_core PUBLIC mesh_protocol m)
+target_compile_options(node_core PRIVATE ${WARN_FLAGS})
+
+set(GW_DIR ${REPO_ROOT}/gateway/components/gw_core)
+add_library(gw_core STATIC
+    ${GW_DIR}/gw_core.c
+    ${GW_DIR}/gw_fsm.c
+    ${GW_DIR}/gw_json.c
+    ${GW_DIR}/gw_registry.c)
+target_include_directories(gw_core PUBLIC ${GW_DIR}/include)
+target_link_libraries(gw_core PUBLIC mesh_protocol)
+target_compile_options(gw_core PRIVATE ${WARN_FLAGS})
 
 # --- Tests -------------------------------------------------------------------
 enable_testing()
@@ -58,3 +78,10 @@ mesh_add_test(test_crc mesh_protocol)
 mesh_add_test(test_codec mesh_protocol)
 mesh_add_test(test_seq mesh_protocol)
 mesh_add_test(test_tx mesh_protocol)
+mesh_add_test(test_util mesh_protocol)
+mesh_add_test(test_node_config node_core)
+mesh_add_test(test_sensor_math node_core)
+mesh_add_test(test_gw_registry gw_core)
+mesh_add_test(test_gw_fsm gw_core)
+mesh_add_test(test_gw_json gw_core)
+mesh_add_test(test_gw_core gw_core)
