@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    name: Host C tests + simulator (ASan/UBSan)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure and build
+        run: |
+          cmake -S host -B host/build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build host/build -j
+      - name: Unity tests
+        run: ctest --test-dir host/build --output-on-failure
+      - name: Golden vectors are up to date
+        run: |
+          ./host/build/mesh_vectors > /tmp/golden.json
+          diff -u tests/data/golden_frames.json /tmp/golden.json
+      - name: Simulator run (600 s, 6 nodes, seed 42)
+        run: |
+          mkdir -p out
+          ./host/build/mesh_sim --out out/sim.jsonl --truth out/truth.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simulator-output
+          path: out/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: host-build
+          path: host/build/mesh_sim
+          retention-days: 1
+
+  python:
+    name: Python ${{ matrix.python }} (ruff, mypy, pytest)
+    runs-on: ubuntu-24.04
+    needs: host-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - uses: actions/download-artifact@v4
+        with:
+          name: host-build
+          path: host/build
+      - uses: actions/download-artifact@v4
+        with:
+          name: simulator-output
+          path: out
+      - name: Install
+        run: |
+          chmod +x host/build/mesh_sim
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Ruff
+        run: |
+          python -m ruff check src tests scripts
+          python -m ruff format --check src tests scripts
+      - name: Mypy (strict)
+        run: python -m mypy
+      - name: Pytest
+        run: python -m pytest --cov --cov-report=term-missing
+      - name: Metrics consistency on the full simulator run
+        run: meshdash report out/sim.jsonl --truth out/truth.json --strict --markdown out/results.md
+
+  firmware:
+    name: Build ${{ matrix.name }} (ESP-IDF v5.4, esp32s3)
+    runs-on: ubuntu-24.04
+    container: espressif/idf:v5.4
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: sensor_node (simulated sensors)
+            project: sensor_node
+            defaults: "sdkconfig.defaults"
+          - name: sensor_node (MQ-2 + R380/AS5600 + MPU-6050 + encryption)
+            project: sensor_node
+            defaults: "sdkconfig.defaults;sdkconfig.ci.hardware"
+          - name: gateway
+            project: gateway
+            defaults: "sdkconfig.defaults"
+    steps:
+      - uses: actions/checkout@v4
+      - name: idf.py build
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          cd ${{ matrix.project }}
+          idf.py -B build -DSDKCONFIG=build/sdkconfig -DSDKCONFIG_DEFAULTS="${{ matrix.defaults }}" set-target esp32s3 build
+          idf.py -B build -DSDKCONFIG=build/sdkconfig size | tee build/size.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ strategy.job-index }}
+          path: |
+            ${{ matrix.project }}/build/*.bin
+            ${{ matrix.project }}/build/*.elf
+            ${{ matrix.project }}/build/bootloader/bootloader.bin
+            ${{ matrix.project }}/build/partition_table/partition-table.bin
+            ${{ matrix.project }}/build/size.txt
+          retention-days: 14
+
+  qemu-smoke:
+    name: QEMU smoke test (loopback radio) + stack high-water marks
+    runs-on: ubuntu-24.04
+    container: espressif/idf:v5.4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run node and gateway in QEMU
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          mkdir -p out
+          scripts/qemu_run.sh sensor_node 75 out/qemu_node.log &
+          scripts/qemu_run.sh gateway 110 out/qemu_gw.log scripts/qemu_gateway_cmds.txt
+          wait
+      - name: Check logs
+        shell: bash
+        run: |
+          python3 scripts/qemu_check.py node out/qemu_node.log
+          python3 scripts/qemu_check.py gateway out/qemu_gw.log
+      - name: Stack high-water marks
+        shell: bash
+        run: grep -E "stack task=" out/qemu_node.log | tail -4; grep -E '"type":"gw_stats"' out/qemu_gw.log | tail -1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qemu-logs
+          path: out/
