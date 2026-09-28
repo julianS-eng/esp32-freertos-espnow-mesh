@@ -90,3 +90,8 @@ mesh_add_test(test_gw_core gw_core)
 add_executable(mesh_sim sim/mesh_sim.c)
 target_link_libraries(mesh_sim PRIVATE gw_core node_core m)
 target_compile_options(mesh_sim PRIVATE ${WARN_FLAGS})
+
+# --- Golden vectors for the Python conformance tests -------------------------
+add_executable(mesh_vectors tools/mesh_vectors.c)
+target_link_libraries(mesh_vectors PRIVATE mesh_protocol)
+target_compile_options(mesh_vectors PRIVATE ${WARN_FLAGS})

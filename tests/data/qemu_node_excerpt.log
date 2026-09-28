@@ -1,0 +1,12 @@
+I (5349) node: stack task=sensor size=4096 min_free=3116
+I (5352) node: stack task=tx size=4096 min_free=1208
+I (5356) node: stack task=heartbeat size=3072 min_free=1008
+I (5356) node: stack task=supervisor size=3072 min_free=2184
+I (5356) node: hb: heap=338608 min=334152 ok=5 retries=0 failed=0 drops=0 rx_invalid=0
+I (10350) node: stack task=sensor size=4096 min_free=3116
+I (10350) node: stack task=tx size=4096 min_free=1208
+I (10352) node: stack task=heartbeat size=3072 min_free=1008
+I (10352) node: stack task=supervisor size=3072 min_free=2184
+I (10352) node: hb: heap=338608 min=334152 ok=11 retries=3 failed=0 drops=0 rx_invalid=0
+I (15352) node: stack task=sensor size=4096 min_free=3116
+I (15352) node: stack task=tx size=4096 min_free=1208

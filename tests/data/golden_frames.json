@@ -1,0 +1,12 @@
+{
+"crc_check": {"input": "123456789", "crc": 10673},
+"vectors": [
+  {"name": "join", "type": 1, "node_id": 258, "seq": 0, "uptime_ms": 1234, "attempt": 1, "flags": 0, "hex": "4d01010002010000d204000001120302010007000000e8030000881300000a03aa22"},
+  {"name": "join_ack", "type": 2, "node_id": 0, "seq": 9, "uptime_ms": 99, "attempt": 1, "flags": 0, "hex": "4d010200000009006300000001060006085200002483"},
+  {"name": "data", "type": 3, "node_id": 258, "seq": 65535, "uptime_ms": 3735928559, "attempt": 3, "flags": 3, "hex": "4d0103030201ffffefbeadde031b0101290900000403443603000b2bfcffff04ffffff7f1100000080a142"},
+  {"name": "data_empty", "type": 3, "node_id": 1, "seq": 1, "uptime_ms": 0, "attempt": 1, "flags": 0, "hex": "4d01030001000100000000000107000000000000000284"},
+  {"name": "heartbeat", "type": 4, "node_id": 258, "seq": 500, "uptime_ms": 60000, "attempt": 1, "flags": 1, "hex": "4d0104010201f40160ea000001323c000000e0930400d06c04003a000000040000000100000002000000f00a00008c230000bd04e8034c04b00414057805dc05b8ce"},
+  {"name": "ack", "type": 5, "node_id": 0, "seq": 10, "uptime_ms": 100, "attempt": 1, "flags": 0, "hex": "4d01050000000a00640000000106ffff03030180d4e0"},
+  {"name": "config", "type": 6, "node_id": 0, "seq": 11, "uptime_ms": 200, "attempt": 1, "flags": 1, "hex": "4d01060100000b00c8000000010502102700006e42"}
+]
+}
