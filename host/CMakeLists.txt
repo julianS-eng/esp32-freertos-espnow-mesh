@@ -85,3 +85,8 @@ mesh_add_test(test_gw_registry gw_core)
 mesh_add_test(test_gw_fsm gw_core)
 mesh_add_test(test_gw_json gw_core)
 mesh_add_test(test_gw_core gw_core)
+
+# --- Discrete-event mesh simulator --------------------------------------------
+add_executable(mesh_sim sim/mesh_sim.c)
+target_link_libraries(mesh_sim PRIVATE gw_core node_core m)
+target_compile_options(mesh_sim PRIVATE ${WARN_FLAGS})
