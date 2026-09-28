@@ -58,20 +58,27 @@ static void test_identity_change_requires_persist(void)
     TEST_ASSERT_EQUAL_INT(GW_JOIN_OK_NEW, gw_registry_join(&reg, mac, 10, &j, 0, NULL));
 }
 
-static void test_join_resets_sequence_tracking(void)
+static void test_join_resets_sequence_tracking_only_after_reboot(void)
 {
     uint8_t mac[6];
     mac_of(1, mac);
-    const mesh_join_payload_t j = join_payload(5000);
+    mesh_join_payload_t j = join_payload(5000);
     gw_node_t *n;
     gw_registry_join(&reg, mac, 10, &j, 0, &n);
     uint32_t gap;
     bool tr;
     gw_transition_t t;
     gw_registry_on_frame(&reg, n, 500, -50, 1, &gap, &t, &tr);
+    /* Re-join after link loss (same boot): tracker kept, the outage is a gap. */
     gw_registry_join(&reg, mac, 10, &j, 2, &n);
+    TEST_ASSERT_TRUE(n->seq.initialized);
+    TEST_ASSERT_EQUAL_INT(MESH_SEQ_NEW, gw_registry_on_frame(&reg, n, 505, -50, 3, &gap, &t, &tr));
+    TEST_ASSERT_EQUAL_UINT32(4, gap);
+    /* Reboot (boot_count changed): the node's counter restarted, so reset. */
+    j.boot_count++;
+    gw_registry_join(&reg, mac, 10, &j, 4, &n);
     TEST_ASSERT_FALSE(n->seq.initialized);
-    TEST_ASSERT_EQUAL_INT(MESH_SEQ_NEW, gw_registry_on_frame(&reg, n, 0, -50, 3, &gap, &t, &tr));
+    TEST_ASSERT_EQUAL_INT(MESH_SEQ_NEW, gw_registry_on_frame(&reg, n, 0, -50, 5, &gap, &t, &tr));
     TEST_ASSERT_EQUAL_UINT32(0, n->seq.lost);
 }
 
@@ -218,7 +225,7 @@ int main(void)
     UNITY_BEGIN();
     RUN_TEST(test_join_new_then_known);
     RUN_TEST(test_identity_change_requires_persist);
-    RUN_TEST(test_join_resets_sequence_tracking);
+    RUN_TEST(test_join_resets_sequence_tracking_only_after_reboot);
     RUN_TEST(test_capacity_and_id_conflict);
     RUN_TEST(test_liveness_thresholds_follow_heartbeat_interval);
     RUN_TEST(test_skipping_suspect_goes_straight_offline);

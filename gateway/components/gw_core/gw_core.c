@@ -96,11 +96,12 @@ static void handle_join(gw_core_t *core, const uint8_t mac[MESH_MAC_LEN], const 
         status = MESH_JOIN_REJECTED_ID_CONFLICT;
         break;
     }
+    uint32_t gap = 0;
+    mesh_seq_result_t sr = MESH_SEQ_NEW;
     if (node != NULL) {
-        uint32_t gap;
         bool transitioned;
         gw_transition_t tr;
-        (void)gw_registry_on_frame(&core->reg, node, f->hdr.seq, rssi, now_ms, &gap, &tr, &transitioned);
+        sr = gw_registry_on_frame(&core->reg, node, f->hdr.seq, rssi, now_ms, &gap, &tr, &transitioned);
         res->add_peer = true;
         res->persist = (jr == GW_JOIN_OK_NEW);
         if (prev_state != GW_NODE_ONLINE) {
@@ -132,6 +133,8 @@ static void handle_join(gw_core_t *core, const uint8_t mac[MESH_MAC_LEN], const 
         o->attempt = f->hdr.attempt;
         o->rssi = rssi;
         o->node_uptime_ms = f->hdr.uptime_ms;
+        o->gap = gap;
+        o->seq_result = (uint8_t)sr;
         o->u.join.p = f->u.join;
         o->u.join.status = status;
         o->u.join.is_new = (jr == GW_JOIN_OK_NEW);

@@ -250,7 +250,8 @@ int gw_json_format(const gw_out_t *r, char *buf, size_t cap)
         node_field(&w, r);
         mac_field(&w, r);
         frame_meta(&w, r);
-        jw_printf(&w, ",\"status\":\"%s\",\"new\":%s,\"fw\":", join_status_str(r->u.join.status),
+        jw_printf(&w, ",\"gap\":%" PRIu32 ",\"seq_state\":\"%s\",\"status\":\"%s\",\"new\":%s,\"fw\":", r->gap,
+                  seq_result_str(r->seq_result), join_status_str(r->u.join.status),
                   r->u.join.is_new ? "true" : "false");
         fw_string(&w, r->u.join.p.fw_version);
         jw_printf(&w, ",\"boot\":%" PRIu32 ",\"reset\":%u,\"report_ms\":%" PRIu32 ",\"hb_ms\":%" PRIu32 ",\"backend\":",

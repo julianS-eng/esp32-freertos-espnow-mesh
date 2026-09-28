@@ -89,8 +89,9 @@ size_t gw_registry_count(const gw_registry_t *reg);
 size_t gw_registry_count_state(const gw_registry_t *reg, gw_node_state_t state);
 
 /**
- * Register or refresh a node from a JOIN. Resets its sequence tracker (a JOIN
- * starts a new sequence space) and marks it ONLINE.
+ * Register or refresh a node from a JOIN and mark it ONLINE. The sequence
+ * tracker is reset only for a new node or when boot_count changed (reboot);
+ * a re-join after link loss keeps it so the outage's losses stay visible.
  */
 gw_join_result_t gw_registry_join(gw_registry_t *reg, const uint8_t mac[MESH_MAC_LEN], uint16_t node_id,
                                   const mesh_join_payload_t *join, uint64_t now_ms, gw_node_t **out);

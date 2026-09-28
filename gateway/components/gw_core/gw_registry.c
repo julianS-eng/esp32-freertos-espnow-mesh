@@ -80,6 +80,7 @@ gw_join_result_t gw_registry_join(gw_registry_t *reg, const uint8_t mac[MESH_MAC
         return GW_JOIN_ID_CONFLICT;
     }
     gw_join_result_t res = GW_JOIN_OK_KNOWN;
+    bool reset_seq = (n == NULL) || (n->boot_count != join->boot_count);
     if (n == NULL) {
         if (gw_registry_count(reg) >= reg->capacity) {
             if (out) {
@@ -114,7 +115,12 @@ gw_join_result_t gw_registry_join(gw_registry_t *reg, const uint8_t mac[MESH_MAC
     n->heartbeat_interval_ms = join->heartbeat_interval_ms;
     n->state = GW_NODE_ONLINE;
     n->last_seen_ms = now_ms;
-    mesh_seq_tracker_reset(&n->seq);
+    if (reset_seq) {
+        /* New node or reboot: its sequence counter restarted. A re-join after
+         * a link loss keeps the tracker, so frames lost during the outage
+         * still show up as gaps. */
+        mesh_seq_tracker_reset(&n->seq);
+    }
     if (out) {
         *out = n;
     }
