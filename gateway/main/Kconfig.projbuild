@@ -1,0 +1,68 @@
+menu "Gateway"
+
+    config GW_MAX_NODES
+        int "Maximum registered nodes"
+        range 1 19
+        default 16
+        help
+            ESP-NOW allows 20 peers in total (one is the broadcast peer) and
+            at most 17 encrypted peers (CONFIG_ESP_WIFI_ESPNOW_MAX_ENCRYPT_NUM).
+            Larger fleets need peer rotation - see docs "Future work".
+
+    config GW_RX_QUEUE_LEN
+        int "Radio RX queue depth (frames)"
+        range 4 128
+        default 32
+
+    config GW_OUT_QUEUE_LEN
+        int "Output (JSON) queue depth (records, allocated in PSRAM when available)"
+        range 16 2048
+        default 256
+
+    config GW_SUSPECT_MISSES
+        int "Missed heartbeats before a node is SUSPECT"
+        range 1 20
+        default 2
+
+    config GW_OFFLINE_MISSES
+        int "Missed heartbeats before a node is OFFLINE"
+        range 2 50
+        default 4
+
+    config GW_LIVENESS_GRACE_MS
+        int "Grace period added to liveness thresholds (ms)"
+        default 1000
+
+    config GW_STATS_PERIOD_S
+        int "Period of gw_stats and link records (s)"
+        range 5 3600
+        default 30
+
+    config GW_QUEUE_PRESSURE_PCT
+        int "Queue fill level that enters DEGRADED (%)"
+        range 10 100
+        default 75
+
+    config GW_QUEUE_RELIEF_PCT
+        int "Queue fill level that returns to RUNNING (%)"
+        range 0 90
+        default 25
+
+    config GW_CONFIG_ATTEMPTS
+        int "Transmissions of a CONFIG frame before giving up"
+        range 1 8
+        default 4
+
+    config GW_CONFIG_ACK_TIMEOUT_MS
+        int "ACK timeout for CONFIG frames (ms)"
+        default 100
+
+    config GW_RADIO_INIT_RETRIES
+        int "Radio bring-up attempts before restarting the chip"
+        default 5
+
+    config GW_QUIET_LOGS
+        bool "Lower ESP_LOG level to WARN once running (keeps the JSON stream clean)"
+        default y
+
+endmenu

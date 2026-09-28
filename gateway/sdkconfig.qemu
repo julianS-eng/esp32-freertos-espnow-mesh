@@ -1,0 +1,6 @@
+# QEMU overlay: replace the radio with the loopback test double (emulated
+# nodes, one of which goes silent between t=40 s and t=80 s).
+CONFIG_MESH_RADIO_LOOPBACK_NODES=y
+CONFIG_MESH_LOOPBACK_NODE_COUNT=4
+CONFIG_MESH_LOOPBACK_LOSS_PCT=5
+CONFIG_GW_STATS_PERIOD_S=10
