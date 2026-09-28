@@ -330,15 +330,24 @@ def compute(records: Iterable[AnyRecord], bin_s: float = 10.0) -> tuple[MeshMetr
     for r in recs:
         mm.add(r)
     mm.finish()
-    n_bins = max(1, math.ceil(mm.duration_s / bin_s) + 1)
+    # Only complete bins: a trailing partial bin would look like a traffic drop.
+    n_bins = max(1, math.floor(mm.duration_s / bin_s))
     acc = {nid: [0] * n_bins for nid in sorted(mm.nodes)}
     lost = {nid: [0] * n_bins for nid in sorted(mm.nodes)}
     t0 = mm.first_ts or 0
+    boots: dict[int, int] = {}
     for r in recs:
+        idx = int((r.ts - t0) / 1000.0 // bin_s)
+        if idx >= n_bins:
+            continue
         if isinstance(r, DataRecord | HeartbeatRecord):
-            idx = int((r.ts - t0) / 1000.0 // bin_s)
             acc[r.node][idx] += 1
             lost[r.node][idx] += -1 if r.seq_state == "late" else r.gap
+        elif isinstance(r, JoinRecord) and r.status == "accepted":
+            acc[r.node][idx] += 1
+            if boots.get(r.node) == r.boot:  # same rule as NodeMetrics.add_join
+                lost[r.node][idx] += r.gap
+            boots[r.node] = r.boot
     return mm, Activity(bin_s, acc, lost)
 
 

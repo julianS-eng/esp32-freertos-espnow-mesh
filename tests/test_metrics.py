@@ -84,8 +84,12 @@ def test_loss_late_and_duplicates() -> None:
     assert (nm.data, nm.lost, nm.late, nm.dups, nm.joins) == (3, 1, 1, 1, 1)
     assert nm.epoch.rx == 4  # join + 3 data
     assert nm.loss_ratio == pytest.approx(1 / (4 + 1))
-    assert act.accepted[1][:3] == [0, 1, 2]
-    assert sum(act.lost[1]) == 1
+    # 2.2 s of log -> two complete 1 s bins; the trailing partial bin is omitted.
+    assert act.accepted[1] == [1, 1]
+    assert act.lost[1] == [0, 0]
+    _, act_long = compute([*recs, data(10_000, 5)], bin_s=1.0)  # later record completes the bins
+    assert act_long.accepted[1][:3] == [1, 1, 2]
+    assert sum(act_long.lost[1]) == 1  # gap of 2, minus the late arrival
 
 
 def test_rejoin_same_boot_keeps_epoch_reboot_resets_it() -> None:

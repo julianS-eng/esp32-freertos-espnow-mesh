@@ -31,6 +31,17 @@ def test_simulator_run_passes_every_consistency_check(sim_run: tuple[Path, Path]
     assert not failed, failed
 
 
+def test_activity_bins_agree_with_node_totals(sim_run: tuple[Path, Path]) -> None:
+    log, _ = sim_run
+    mm, act = compute(read_log(log), bin_s=1.0)
+    tail_start = (mm.first_ts or 0) + act.n_bins * 1000
+    for nid, nm in mm.nodes.items():
+        in_tail = [r for r in read_log(log) if getattr(r, "node", None) == nid and r.ts >= tail_start]
+        if not in_tail:
+            assert sum(act.lost[nid]) == nm.lost
+            assert sum(act.accepted[nid]) == nm.accepted
+
+
 def test_simulator_is_deterministic(sim_run: tuple[Path, Path], tmp_path: Path) -> None:
     import subprocess  # noqa: PLC0415
 
