@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "espnow-mesh-tools"
+version = "1.0.0"
+description = "Log parser, metrics, live dashboard and report generator for the ESP32-S3 FreeRTOS + ESP-NOW sensor mesh"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "julianS-eng" }]
+keywords = ["esp32", "esp-now", "freertos", "iot", "dashboard"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: System :: Networking :: Monitoring",
+  "Typing :: Typed",
+]
+dependencies = [
+  "rich>=13.7",
+  "matplotlib>=3.8",
+  "numpy>=1.26",
+  "pillow>=10.0",
+]
+
+[project.optional-dependencies]
+serial = ["pyserial>=3.5"]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.6",
+  "mypy>=1.11",
+  "pyserial>=3.5",
+]
+
+[project.scripts]
+meshdash = "meshtools.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+meshtools = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.coverage.run]
+source = ["meshtools"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "D", "ANN", "PL", "PT"]
+ignore = [
+  "D203", "D213",   # incompatible pydocstyle pairs; use D211/D212
+  "PLR2004",        # magic numbers are fine in protocol constants and tests
+  "PLR0913",        # plotting helpers take many keyword options
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "ANN", "PLR0915", "PLR0917", "S101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["serial", "serial.*"]
+ignore_missing_imports = true
