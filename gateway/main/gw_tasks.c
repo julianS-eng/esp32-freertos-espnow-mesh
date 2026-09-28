@@ -53,7 +53,7 @@ static const struct {
     BaseType_t core;
     uint32_t budget_ms; /* supervisor: max silence before restart */
 } s_task_def[T_COUNT] = {
-    /* peak ~1.2 KB; keeps room for esp_now_send()/esp_now_add_peer() internals */
+    /* peak ~1.0-1.2 KB; keeps room for esp_now_send()/esp_now_add_peer() internals */
     [T_RX] = {"rx", 4096, 9, 0, 5000},
     /* peak ~1.8 KB incl. NVS registry write */
     [T_LIVENESS] = {"liveness", 3072, 7, 1, 5000},
@@ -61,7 +61,7 @@ static const struct {
     [T_OUT] = {"out", 3072, 5, 1, 5000},
     /* CONFIG send path measured by feeding commands to the QEMU console */
     [T_CMD] = {"cmd", 4096, 3, 1, 5000},
-    /* peak ~0.9 KB; restart path (ESP_LOGE) not exercised */
+    /* peak ~0.9-1.1 KB; restart path (ESP_LOGE) not exercised */
     [T_SUPERVISOR] = {"supervisor", 3072, 10, 1, UINT32_MAX},
 };
 

@@ -155,19 +155,20 @@ emulated nodes, one going offline, and console commands exercising CONFIG).
 
 | Firmware | Task | Stack (B) | Min free (B) | Peak used (B) | Head-room |
 |---|---|---:|---:|---:|---:|
-| sensor_node | sensor | 4096 | 3068 | 1028 | 75 % |
-| sensor_node | tx | 5120 | 2232 | 2888 | 44 % |
-| sensor_node | heartbeat | 3584 | 1380 | 2204 | 39 % |
+| sensor_node | sensor | 4096 | 3096 | 1000 | 76 % |
+| sensor_node | tx | 5120 | 2244 | 2876 | 44 % |
+| sensor_node | heartbeat | 3584 | 1312 | 2272 | 37 % |
 | sensor_node | supervisor | 3072 | 2184 | 888 | 71 % |
-| gateway | rx | 4096 | 2924 | 1172 | 71 % |
-| gateway | liveness | 3072 | 1280 | 1792 | 42 % |
+| gateway | rx | 4096 | 3052 | 1044 | 75 % |
+| gateway | liveness | 3072 | 1296 | 1776 | 42 % |
 | gateway | out | 3072 | 1124 | 1948 | 37 % |
 | gateway | cmd | 4096 | 2360 | 1736 | 58 % |
-| gateway | supervisor | 3072 | 2204 | 868 | 72 % |
+| gateway | supervisor | 3072 | 2000 | 1072 | 65 % |
 
-The minima move by tens of bytes between runs (the CI run of the same code
-recorded 1296 B free for the node heartbeat task and 1204 B for the gateway
-out task), so sizes keep ≥ 1 KB of margin. The loopback radio does not execute
+The minima move by up to ~200 bytes between runs because they depend on which
+paths coincide (across the QEMU runs made while developing, the node heartbeat
+task ranged from 1296 to 1380 B free and the gateway supervisor from 2000 to
+2204 B free), so every stack keeps ≥ 1 KB of margin. The loopback radio does not execute
 `esp_now_send()` internals or the real sensor drivers; those paths get extra
 head-room and must be re-measured on hardware (every heartbeat carries the HWM
 of each node task, so this needs no debugger).

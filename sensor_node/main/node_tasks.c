@@ -38,7 +38,7 @@ static const char *TAG = "node";
  * ESP-NOW driver inside esp_now_send(), the real I2C/ADC drivers). */
 #define STACK_SENSOR 4096     /* sim peak ~1.0 KB; real drivers not yet measured */
 #define STACK_TX 5120         /* peak ~2.9 KB + esp_now_send() internals */
-#define STACK_HEARTBEAT 3584  /* peak ~2.1 KB (ESP_LOG with many varargs) */
+#define STACK_HEARTBEAT 3584  /* peak ~2.3 KB (ESP_LOG with many varargs) */
 #define STACK_SUPERVISOR 3072 /* peak ~0.9 KB; restart path (ESP_LOGE) not exercised */
 
 #define PRIO_SUPERVISOR 10

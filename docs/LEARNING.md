@@ -47,14 +47,14 @@ corrompe memoria ajena: es uno de los fallos más difíciles de depurar. Por eso
   tenido la tarea desde que arrancó (en ESP-IDF, en **bytes**).
 * Se dimensiona con datos: pico medido × ~1,5, redondeado, más margen donde el
   código no se pudo ejercitar. En este proyecto, por ejemplo, la tarea `tx` del
-  nodo usó como máximo 2888 B en QEMU y tiene 5120 B, porque `esp_now_send()`
+  nodo usó como máximo 2876 B en QEMU y tiene 5120 B, porque `esp_now_send()`
   real no se ejecutó en QEMU.
 * Se activan redes de seguridad: canario de desbordamiento
   (`CONFIG_FREERTOS_CHECK_STACKOVERFLOW_CANARY`) y *watchpoint* al final de la pila.
 
 Regla práctica: nada de buffers grandes en la pila (se declaran `static`), y
 cuidado con `printf`/`ESP_LOG` con muchos argumentos: la tarea `heartbeat` es la
-que más pila usa (2204 B) precisamente por sus líneas de log.
+que más pila usa (2272 B) precisamente por sus líneas de log.
 
 ### 1.3 Comunicación entre tareas
 
@@ -227,11 +227,11 @@ Si la cola está llena, se cuenta la pérdida y se sale.
 
 Midiendo. Cada latido lleva el *high-water mark* de cada tarea
 (`uxTaskGetStackHighWaterMark`), y el firmware se ejecutó en QEMU con el radio
-loopback para obtener picos reales en Xtensa: por ejemplo `tx` usó 2888 B y
-`heartbeat` 2204 B. Regla: pico × ~1,5 redondeado a 512 B, más margen extra en
+loopback para obtener picos reales en Xtensa: por ejemplo `tx` usó 2876 B y
+`heartbeat` 2272 B. Regla: pico × ~1,5 redondeado a 512 B, más margen extra en
 rutas no ejercitadas (el interior de `esp_now_send()`, los drivers reales).
 Además, canario de desbordamiento y *watchpoint* al final de la pila. Las
-mediciones varían decenas de bytes entre ejecuciones, por eso se mantiene ≥ 1 KB
+mediciones varían hasta unos 200 bytes entre ejecuciones, por eso se mantiene ≥ 1 KB
 de margen.
 
 **4. Si ESP-NOW ya tiene ACK, ¿para qué un ACK de aplicación?**

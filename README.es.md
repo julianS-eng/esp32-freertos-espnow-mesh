@@ -37,9 +37,9 @@ FreeRTOS solo mueven datos entre colas.
 | Nodo: tarea | Prioridad | Stack | Pico medido |
 |---|---:|---:|---:|
 | supervisor | 10 | 3072 B | 888 B |
-| tx | 8 | 5120 B | 2888 B |
-| sensor | 6 | 4096 B | 1028 B |
-| heartbeat | 4 | 3584 B | 2204 B |
+| tx | 8 | 5120 B | 2876 B |
+| sensor | 6 | 4096 B | 1000 B |
+| heartbeat | 4 | 3584 B | 2272 B |
 
 Los picos se midieron con `uxTaskGetStackHighWaterMark()` ejecutando el firmware
 real en **QEMU** (con un radio "loopback" que sustituye solo el RF).

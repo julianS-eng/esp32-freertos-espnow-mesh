@@ -57,9 +57,9 @@ flowchart LR
 | Task | Prio | Core | Stack | Measured peak | Why this priority |
 |---|---:|---:|---:|---:|---|
 | supervisor | 10 | 1 | 3072 | 888 B | Must run even if an application task spins; short and periodic (1 s). |
-| tx | 8 | 0 | 5120 | 2888 B | Latency-critical: waits on ACKs with 30 ms timeouts; CPU bursts are tiny. Same core as the Wi-Fi task to avoid cross-core hand-offs on every frame. |
-| sensor | 6 | 1 | 4096 | 1028 B (sim) | Periodic sampling; the AS5600 window samples once per tick (1 kHz) and must not be delayed by lower-priority work. Kept off core 0 so Wi-Fi bursts do not add jitter. |
-| heartbeat | 4 | 1 | 3584 | 2204 B | Least urgent; a late heartbeat only delays telemetry. |
+| tx | 8 | 0 | 5120 | 2876 B | Latency-critical: waits on ACKs with 30 ms timeouts; CPU bursts are tiny. Same core as the Wi-Fi task to avoid cross-core hand-offs on every frame. |
+| sensor | 6 | 1 | 4096 | 1000 B (sim) | Periodic sampling; the AS5600 window samples once per tick (1 kHz) and must not be delayed by lower-priority work. Kept off core 0 so Wi-Fi bursts do not add jitter. |
+| heartbeat | 4 | 1 | 3584 | 2272 B | Least urgent; a late heartbeat only delays telemetry. |
 | Wi-Fi (IDF) | 23 | 0 | – | – | ESP-IDF's; every application task is far below it so the radio is never starved. |
 
 Measured peaks come from `uxTaskGetStackHighWaterMark()` in QEMU with the
@@ -123,9 +123,9 @@ flowchart LR
 
 | Task | Prio | Core | Stack | Measured peak | Role / why |
 |---|---:|---:|---:|---:|---|
-| supervisor | 10 | 1 | 3072 | 868 B | as on the node |
-| rx | 9 | 0 | 4096 | 1172 B | The only task on the ACK path. Highest application priority so ACK latency does not depend on anything else; next to the Wi-Fi task. |
-| liveness | 7 | 1 | 3072 | 1792 B | 500 ms timers; must not be starved by output formatting. Also performs the (slow) NVS write so the rx task never touches flash. |
+| supervisor | 10 | 1 | 3072 | 1072 B | as on the node |
+| rx | 9 | 0 | 4096 | 1044 B | The only task on the ACK path. Highest application priority so ACK latency does not depend on anything else; next to the Wi-Fi task. |
+| liveness | 7 | 1 | 3072 | 1776 B | 500 ms timers; must not be starved by output formatting. Also performs the (slow) NVS write so the rx task never touches flash. |
 | out | 5 | 1 | 3072 | 1948 B | Formats JSON and writes to the UART; can block on the serial port without delaying ACKs. |
 | cmd | 3 | 1 | 4096 | 1736 B | Human-speed input. |
 
