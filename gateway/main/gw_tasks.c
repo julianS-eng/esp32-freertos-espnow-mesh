@@ -580,7 +580,7 @@ esp_err_t gw_tasks_init(void)
     s_send_eg = xEventGroupCreate();
     s_rx_q = xQueueCreate(CONFIG_GW_RX_QUEUE_LEN, sizeof(rx_item_t));
     s_cfg_ack_q = xQueueCreate(4, sizeof(cfg_ack_t));
-    /* The output queue is the largest buffer (~CONFIG_GW_OUT_QUEUE_LEN x 140 B):
+    /* The output queue is the largest buffer (CONFIG_GW_OUT_QUEUE_LEN x 152 B on Xtensa):
      * put it in PSRAM when present. It is only touched from task context, so
      * cache-disabled periods (flash writes) are not an issue. */
     s_out_q = xQueueCreateWithCaps(CONFIG_GW_OUT_QUEUE_LEN, sizeof(gw_out_t), MALLOC_CAP_SPIRAM);
