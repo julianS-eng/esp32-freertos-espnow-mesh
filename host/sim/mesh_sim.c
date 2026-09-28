@@ -255,6 +255,7 @@ typedef struct {
     uint32_t consecutive_fail;
     uint32_t timer_gen;
     uint32_t sense_gen, hb_gen;
+    uint64_t attempt_t0; /* when the current attempt was handed to the radio */
 
     /* node stats (as carried in heartbeats) */
     uint32_t tx_ok, tx_retries, tx_failed, q_drops;
@@ -469,6 +470,7 @@ static void node_start_delivery(node_t *n)
     mesh_frame_set_attempt(n->frame, n->frame_len, n->tx.attempt);
     n->truth.attempts++;
     n->timer_gen++;
+    n->attempt_t0 = s_now;
     node_radio_send(n, n->frame, n->frame_len, false, true);
 }
 
@@ -478,6 +480,7 @@ static void node_retransmit(node_t *n)
     n->tx_retries++;
     n->truth.attempts++;
     n->timer_gen++;
+    n->attempt_t0 = s_now;
     node_radio_send(n, n->frame, n->frame_len, false, true);
 }
 
@@ -667,6 +670,7 @@ typedef struct {
     size_t len;
     mesh_tx_t tx;
     uint32_t gen;
+    uint64_t attempt_t0;
 } gw_cmd_t;
 
 static gw_cmd_t s_cmd;
@@ -727,6 +731,7 @@ static void gw_cmd_action(mesh_tx_action_t act)
     case MESH_TX_ACTION_SEND:
         mesh_frame_set_attempt(s_cmd.buf, s_cmd.len, s_cmd.tx.attempt);
         s_cmd.gen++;
+        s_cmd.attempt_t0 = s_now;
         gw_radio_send(s_cmd.mac, s_cmd.buf, s_cmd.len, s_now, true);
         break;
     case MESH_TX_ACTION_DONE:
@@ -1027,7 +1032,7 @@ int main(int argc, char **argv)
             break;
         case EV_NODE_SEND_DONE:
             if (n->powered && n->busy && e.gen == n->timer_gen) {
-                mesh_tx_sent(&n->tx, s_now);
+                mesh_tx_sent(&n->tx, n->attempt_t0); /* same convention as node_tasks.c */
                 node_handle_action(n, e.ok ? MESH_TX_ACTION_WAIT : mesh_tx_on_radio_fail(&n->tx, s_now));
             }
             break;
@@ -1089,7 +1094,7 @@ int main(int argc, char **argv)
             break;
         case EV_GW_CMD_SEND_DONE:
             if (s_cmd.active && e.gen == s_cmd.gen) {
-                mesh_tx_sent(&s_cmd.tx, s_now);
+                mesh_tx_sent(&s_cmd.tx, s_cmd.attempt_t0);
                 gw_cmd_action(e.ok ? MESH_TX_ACTION_WAIT : mesh_tx_on_radio_fail(&s_cmd.tx, s_now));
             }
             break;

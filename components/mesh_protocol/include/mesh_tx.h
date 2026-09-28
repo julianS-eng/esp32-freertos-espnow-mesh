@@ -78,7 +78,10 @@ void mesh_tx_init(mesh_tx_t *tx, const mesh_retry_policy_t *policy, uint32_t see
 /** Begin delivering frame @p seq. Returns ACTION_SEND for attempt 1. */
 mesh_tx_action_t mesh_tx_start(mesh_tx_t *tx, uint16_t seq);
 
-/** Record that attempt tx->attempt was handed to the radio at @p now_us. */
+/**
+ * Record that attempt tx->attempt was handed to the radio at @p now_us (take
+ * the timestamp *before* the send call). Arms the ACK timeout from that instant.
+ */
 void mesh_tx_sent(mesh_tx_t *tx, uint64_t now_us);
 
 /**

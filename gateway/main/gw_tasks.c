@@ -396,10 +396,10 @@ static void send_config(uint16_t node_id, uint8_t key, uint32_t value)
     while (act != MESH_TX_ACTION_DONE && act != MESH_TX_ACTION_FAILED) {
         if (act == MESH_TX_ACTION_SEND) {
             mesh_frame_set_attempt(buf, len, tx.attempt);
+            const uint64_t t_send = (uint64_t)esp_timer_get_time();
             const bool mac_ok = radio_send_wait(mac, buf, len);
-            const uint64_t now = (uint64_t)esp_timer_get_time();
-            mesh_tx_sent(&tx, now);
-            act = mac_ok ? MESH_TX_ACTION_WAIT : mesh_tx_on_radio_fail(&tx, now);
+            mesh_tx_sent(&tx, t_send);
+            act = mac_ok ? MESH_TX_ACTION_WAIT : mesh_tx_on_radio_fail(&tx, (uint64_t)esp_timer_get_time());
             continue;
         }
         const uint64_t now = (uint64_t)esp_timer_get_time();

@@ -186,10 +186,12 @@ static deliver_result_t deliver(node_ctx_t *n, mesh_tx_t *tx, uint8_t *buf, size
                 n->stats.tx_retries++;
                 xSemaphoreGive(n->state_mtx);
             }
+            /* Timestamp before handing the frame to the radio: the RTT then
+             * covers both airtimes, and the ACK timeout starts at the send. */
+            const uint64_t t_send = (uint64_t)esp_timer_get_time();
             const bool mac_ok = radio_send_wait(n, n->gw_mac, buf, len);
-            const uint64_t now = (uint64_t)esp_timer_get_time();
-            mesh_tx_sent(tx, now);
-            act = mac_ok ? MESH_TX_ACTION_WAIT : mesh_tx_on_radio_fail(tx, now);
+            mesh_tx_sent(tx, t_send);
+            act = mac_ok ? MESH_TX_ACTION_WAIT : mesh_tx_on_radio_fail(tx, (uint64_t)esp_timer_get_time());
             continue;
         }
         if (act == MESH_TX_ACTION_DONE) {
