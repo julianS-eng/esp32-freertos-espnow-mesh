@@ -94,6 +94,12 @@ gw_join_result_t gw_registry_join(gw_registry_t *reg, const uint8_t mac[MESH_MAC
                 break;
             }
         }
+        if (n == NULL) { /* unreachable while capacity <= GW_REGISTRY_CAPACITY; keeps -O2 honest */
+            if (out) {
+                *out = NULL;
+            }
+            return GW_JOIN_FULL;
+        }
         memset(n, 0, sizeof(*n));
         n->used = true;
         memcpy(n->mac, mac, MESH_MAC_LEN);
