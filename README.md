@@ -118,8 +118,8 @@ How to read it:
   interference burst pushed it to 2.4 %, filled its 8-slot queue (32 readings
   dropped oldest-first) and forced four re-joins.
 * **The node and the gateway disagree, and the gateway is right.** Node 1
-  reports 4 frames abandoned after 4 attempts, but the gateway lost none: all
-  four arrived and every one of their ACKs was lost. The gateway's sequence
+  reports 4 frames abandoned after 4 attempts, but the gateway saw no gap: each
+  of those frames arrived at least once, yet none of its ACKs made it back. The gateway's sequence
   tracker is the ground truth for loss; the node-side counter is an upper bound.
 * **RTT ≈ 2.6 ms** is what the channel model implies: a 17-channel DATA frame is
   108 bytes (+ 43 bytes of 802.11/ESP-NOW overhead in the airtime model) at
