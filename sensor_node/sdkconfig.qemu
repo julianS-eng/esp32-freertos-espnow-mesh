@@ -1,0 +1,6 @@
+# QEMU overlay: Espressif's QEMU does not emulate the Wi-Fi PHY, so replace the
+# radio with the loopback test double (emulated gateway). Everything else is
+# the production configuration. Used by CI (boot smoke test) and to measure
+# task stack high-water marks.
+CONFIG_MESH_RADIO_LOOPBACK_GATEWAY=y
+CONFIG_MESH_LOOPBACK_LOSS_PCT=5

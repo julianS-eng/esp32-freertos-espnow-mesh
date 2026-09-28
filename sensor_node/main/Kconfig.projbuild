@@ -1,0 +1,88 @@
+menu "Sensor node"
+
+    config NODE_ID
+        int "Node id (0 = derive from the Wi-Fi MAC)"
+        range 0 65534
+        default 0
+        help
+            Stored in NVS on first boot. A non-zero value overrides the
+            MAC-derived id. The gateway rejects a JOIN whose id is already
+            owned by another MAC.
+
+    config NODE_GATEWAY_MAC
+        string "Gateway MAC (aa:bb:cc:dd:ee:ff), empty = discover"
+        default ""
+        help
+            Empty: the node accepts the first JOIN_ACK it receives and uses its
+            source as the gateway. Set: only that gateway is accepted.
+            REQUIRED when ESP-NOW encryption is enabled, because the node must
+            register the gateway as an encrypted peer before it can decrypt
+            the (encrypted) JOIN_ACK.
+
+    config NODE_REPORT_INTERVAL_MS
+        int "Default reading interval (ms)"
+        range 100 3600000
+        default 1000
+
+    config NODE_HEARTBEAT_INTERVAL_MS
+        int "Default heartbeat interval (ms)"
+        range 1000 600000
+        default 5000
+
+    config NODE_TX_QUEUE_LEN
+        int "TX queue depth (readings buffered while the link is down)"
+        range 2 64
+        default 8
+        help
+            When full, the oldest reading is dropped (fresh data is worth more
+            than stale data) and queue_drops is incremented.
+
+    menu "Reliability"
+        config NODE_TX_MAX_ATTEMPTS
+            int "Transmissions per frame (including the first)"
+            range 1 8
+            default 4
+        config NODE_ACK_TIMEOUT_MS
+            int "ACK timeout per attempt (ms)"
+            range 5 1000
+            default 30
+        config NODE_BACKOFF_BASE_MS
+            int "Retry backoff base (ms), doubled per retry"
+            range 1 1000
+            default 20
+        config NODE_BACKOFF_MAX_MS
+            int "Retry backoff cap (ms)"
+            range 1 10000
+            default 200
+        config NODE_BACKOFF_JITTER_MS
+            int "Retry jitter, uniform [0, n) ms"
+            range 0 1000
+            default 10
+        config NODE_GATEWAY_LOST_FAILURES
+            int "Consecutive undelivered frames before re-joining"
+            range 1 100
+            default 3
+        config NODE_JOIN_TIMEOUT_MS
+            int "Wait for JOIN_ACK (ms)"
+            default 300
+        config NODE_JOIN_BACKOFF_MAX_MS
+            int "Maximum delay between JOIN attempts (ms)"
+            default 30000
+    endmenu
+
+    menu "Supervision"
+        config NODE_SUPERVISOR_PERIOD_MS
+            int "Supervisor period (ms)"
+            default 1000
+        config NODE_TASK_STALL_MS
+            int "Stall budget for the TX task (ms) before rebooting"
+            default 10000
+            help
+                The sensor and heartbeat budgets are derived from their
+                (runtime-configurable) intervals: 2 x interval + 5 s.
+        config NODE_LOW_HEAP_BYTES
+            int "Warn when free internal heap drops below (bytes)"
+            default 20000
+    endmenu
+
+endmenu
