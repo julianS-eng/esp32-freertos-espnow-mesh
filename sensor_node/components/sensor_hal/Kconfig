@@ -1,0 +1,148 @@
+menu "Sensor node: sensor backends"
+
+    choice SENSOR_MODE
+        prompt "Sensor source"
+        default SENSOR_MODE_SIMULATED
+        help
+            Simulated mode needs no hardware and is what CI and the host
+            simulator exercise. Hardware mode enables any combination of the
+            real drivers below.
+
+        config SENSOR_MODE_SIMULATED
+            bool "Simulated (deterministic, no hardware)"
+        config SENSOR_MODE_HARDWARE
+            bool "Real hardware"
+    endchoice
+
+    config SENSOR_SIM_SEED
+        int "Simulation seed (mixed with the node id)"
+        depends on SENSOR_MODE_SIMULATED
+        default 42
+
+    config SENSOR_MQ2_ENABLE
+        bool "MQ-2 gas sensor (analogue, ADC1)"
+        depends on SENSOR_MODE_HARDWARE
+        default y
+
+    menu "MQ-2 settings"
+        depends on SENSOR_MQ2_ENABLE
+
+        config SENSOR_MQ2_GPIO
+            int "ADC1 input GPIO"
+            range 1 10
+            default 4
+            help
+                ESP32-S3 ADC1 is on GPIO1..GPIO10. ADC2 cannot be used while
+                Wi-Fi is active, so only ADC1 pins are accepted.
+
+        config SENSOR_MQ2_DIVIDER_TOP_OHM
+            int "Divider resistor AO -> ADC pin (ohm, 0 = no divider)"
+            default 10000
+            help
+                The MQ-2 module output swings up to 5 V; the ESP32-S3 ADC
+                tolerates 3.3 V. Use a divider (e.g. 10k/20k).
+
+        config SENSOR_MQ2_DIVIDER_BOTTOM_OHM
+            int "Divider resistor ADC pin -> GND (ohm)"
+            default 20000
+
+        config SENSOR_MQ2_RL_OHM
+            int "Module load resistor RL (ohm)"
+            default 1000
+
+        config SENSOR_MQ2_VC_MV
+            int "Circuit supply Vc (mV)"
+            default 5000
+
+        config SENSOR_MQ2_R0_OHM
+            int "Default R0 (clean-air resistance, ohm) if not calibrated"
+            default 10000
+
+        config SENSOR_MQ2_WARMUP_S
+            int "Heater warm-up before readings are flagged valid (s)"
+            default 60
+            help
+                The datasheet recommends >24 h preheat for best accuracy;
+                readings are flagged MESH_STATUS_WARMING_UP until this elapses.
+
+        config SENSOR_MQ2_AUTOCAL
+            bool "Calibrate R0 in clean air after warm-up and store it in NVS"
+            default y
+
+        config SENSOR_MQ2_OVERSAMPLE
+            int "ADC samples averaged per reading"
+            range 1 256
+            default 32
+    endmenu
+
+    config SENSOR_MOTOR_ENABLE
+        bool "R380 DC motor (PWM via H-bridge) + AS5600 magnetic encoder (I2C)"
+        depends on SENSOR_MODE_HARDWARE
+        default n
+
+    menu "Motor + AS5600 settings"
+        depends on SENSOR_MOTOR_ENABLE
+
+        config SENSOR_MOTOR_PWM_GPIO
+            int "PWM output GPIO (H-bridge enable / IN1)"
+            default 5
+        config SENSOR_MOTOR_DIR_GPIO
+            int "Direction GPIO (H-bridge IN2), -1 if unused"
+            default 6
+        config SENSOR_MOTOR_PWM_FREQ_HZ
+            int "PWM frequency (Hz)"
+            range 1000 40000
+            default 20000
+            help
+                20 kHz is above the audible range; the LEDC timer uses 10-bit
+                resolution at this frequency.
+        config SENSOR_MOTOR_DUTY_PCT
+            int "Open-loop duty cycle (%)"
+            range 0 100
+            default 50
+        config SENSOR_MOTOR_RAMP_MS
+            int "Soft-start ramp duration (ms)"
+            default 2000
+            help
+                Limits inrush current of the brushed motor at start-up.
+        config SENSOR_MOTOR_RPM_WINDOW_MS
+            int "Speed measurement window (ms)"
+            range 5 1000
+            default 50
+            help
+                The AS5600 angle is sampled once per RTOS tick (1 kHz) during
+                this window and unwrapped. Unambiguous up to 30000 rpm on the
+                encoder shaft (< half a turn per sample).
+    endmenu
+
+    config SENSOR_MPU6050_ENABLE
+        bool "MPU-6050 IMU on GY-521 board (I2C)"
+        depends on SENSOR_MODE_HARDWARE
+        default n
+
+    menu "MPU-6050 settings"
+        depends on SENSOR_MPU6050_ENABLE
+
+        config SENSOR_MPU6050_ADDR
+            hex "I2C address (0x68 with AD0 low, 0x69 high)"
+            default 0x68
+        config SENSOR_MPU6050_GYRO_CAL_SAMPLES
+            int "Gyro bias samples at boot (0 = skip, device must be still)"
+            default 200
+    endmenu
+
+    menu "I2C bus (shared by AS5600 and MPU-6050)"
+        depends on SENSOR_MOTOR_ENABLE || SENSOR_MPU6050_ENABLE
+
+        config SENSOR_I2C_SDA_GPIO
+            int "SDA GPIO"
+            default 8
+        config SENSOR_I2C_SCL_GPIO
+            int "SCL GPIO"
+            default 9
+        config SENSOR_I2C_FREQ_HZ
+            int "SCL frequency (Hz)"
+            default 400000
+    endmenu
+
+endmenu
