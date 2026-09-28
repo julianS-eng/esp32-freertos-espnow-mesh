@@ -113,6 +113,7 @@ typedef enum {
     MESH_JOIN_ACCEPTED = 0,
     MESH_JOIN_REJECTED_FULL = 1,
     MESH_JOIN_REJECTED_VERSION = 2,
+    MESH_JOIN_REJECTED_ID_CONFLICT = 3, /**< Node id already owned by another MAC. */
 } mesh_join_status_t;
 
 /** CONFIG keys. */
