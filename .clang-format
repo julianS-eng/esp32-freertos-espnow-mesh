@@ -1,0 +1,10 @@
+# Close to the ESP-IDF style (4-space indent, attached braces for control
+# statements, 120 columns).
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 110
+BreakBeforeBraces: Linux
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+PointerAlignment: Right
+SortIncludes: false

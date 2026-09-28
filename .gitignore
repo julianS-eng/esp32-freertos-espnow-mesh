@@ -1,0 +1,40 @@
+# ESP-IDF build outputs
+build/
+build-*/
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
+*.bin
+*.elf
+*.map
+
+# Host (CMake) builds
+host/build/
+cmake-build-*/
+compile_commands.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+
+# Generated logs and reports (regenerate with `make sim`)
+*.jsonl
+!docs/samples/*.jsonl
+out/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
