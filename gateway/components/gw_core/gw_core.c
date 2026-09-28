@@ -70,6 +70,11 @@ static void handle_join(gw_core_t *core, const uint8_t mac[MESH_MAC_LEN], const 
                         uint64_t now_ms, gw_rx_result_t *res)
 {
     core->cnt.joins++;
+    /* Remember the liveness state before the JOIN resets it to ONLINE, so a
+     * node re-joining after a reboot or link loss still reports recovery. */
+    const gw_node_t *prev = gw_registry_find_mac(&core->reg, mac);
+    const gw_node_state_t prev_state = prev ? prev->state : GW_NODE_ONLINE;
+    const uint64_t prev_seen = prev ? prev->last_seen_ms : now_ms;
     gw_node_t *node = NULL;
     gw_join_result_t jr;
     if (f->hdr.node_id == MESH_GATEWAY_NODE_ID || f->hdr.node_id == MESH_BROADCAST_NODE_ID) {
@@ -98,6 +103,15 @@ static void handle_join(gw_core_t *core, const uint8_t mac[MESH_MAC_LEN], const 
         (void)gw_registry_on_frame(&core->reg, node, f->hdr.seq, rssi, now_ms, &gap, &tr, &transitioned);
         res->add_peer = true;
         res->persist = (jr == GW_JOIN_OK_NEW);
+        if (prev_state != GW_NODE_ONLINE) {
+            gw_out_t *o = push_out(res, GW_OUT_NODE_STATE, now_ms, mac, node->node_id);
+            if (o != NULL) {
+                o->u.node_state.node_id = node->node_id;
+                o->u.node_state.from = prev_state;
+                o->u.node_state.to = GW_NODE_ONLINE;
+                o->u.node_state.silent_ms = (uint32_t)(now_ms - prev_seen);
+            }
+        }
     } else {
         res->reply_needs_temp_peer = true;
     }

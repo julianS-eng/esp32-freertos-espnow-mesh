@@ -210,6 +210,25 @@ static void test_liveness_tick_and_recovery_record(void)
     TEST_ASSERT_EQUAL_INT(GW_OUT_DATA, res.out[1].kind);
 }
 
+static void test_rejoin_after_offline_reports_recovery(void)
+{
+    join(MAC_A, 5, 0);
+    gw_out_t out[4];
+    TEST_ASSERT_EQUAL_size_t(1, gw_core_tick(&core, 30000, out, 4)); /* -> offline */
+    mesh_frame_t f;
+    mesh_frame_init(&f, MESH_MSG_JOIN, 5, 0, 10, 0);
+    f.u.join.heartbeat_interval_ms = 5000;
+    f.u.join.report_interval_ms = 1000;
+    f.u.join.backend = MESH_BACKEND_SIM;
+    rx(MAC_A, enc(&f), 40000, true);
+    TEST_ASSERT_EQUAL_size_t(2, res.n_out);
+    TEST_ASSERT_EQUAL_INT(GW_OUT_NODE_STATE, res.out[0].kind);
+    TEST_ASSERT_EQUAL_INT(GW_NODE_OFFLINE, res.out[0].u.node_state.from);
+    TEST_ASSERT_EQUAL_INT(GW_NODE_ONLINE, res.out[0].u.node_state.to);
+    TEST_ASSERT_EQUAL_UINT32(40000, res.out[0].u.node_state.silent_ms);
+    TEST_ASSERT_EQUAL_INT(GW_OUT_JOIN, res.out[1].kind);
+}
+
 static void test_config_builder_and_stats(void)
 {
     join(MAC_A, 5, 0);
@@ -250,6 +269,7 @@ int main(void)
     RUN_TEST(test_node_ack_is_routed_to_command_path);
     RUN_TEST(test_wrong_direction_frames_are_errors);
     RUN_TEST(test_liveness_tick_and_recovery_record);
+    RUN_TEST(test_rejoin_after_offline_reports_recovery);
     RUN_TEST(test_config_builder_and_stats);
     return UNITY_END();
 }
